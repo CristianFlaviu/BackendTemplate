@@ -22,6 +22,8 @@ namespace BackendTemplate.API
 
             app.ApplyMigrations();
 
+            app.SeeData();
+
             app.Run();
         }
 
