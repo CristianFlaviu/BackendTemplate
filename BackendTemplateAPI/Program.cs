@@ -12,17 +12,39 @@ namespace BackendTemplate.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            ConfigureServices(builder);
 
+            ConfigureAuthentication(builder);
+
+            var app = builder.Build();
+
+            ConfigureMiddleware(app);
+
+            app.ApplyMigrations();
+
+            app.Run();
+        }
+
+        private static void ConfigureServices(WebApplicationBuilder builder)
+        {
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddInfrastructureServices(builder.Configuration);
+        }
 
-            // Configure JWT Authentication
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+        private static void ConfigureAuthentication(WebApplicationBuilder builder)
+        {
+            var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings") ?? throw new InvalidOperationException("JwtSettings section is missing in the configuration.");
+
+            var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
+            if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Secret))
+            {
+                throw new InvalidOperationException("JwtSettings are not properly configured.");
+            }
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret));
 
             builder.Services.AddAuthentication(options =>
@@ -47,11 +69,11 @@ namespace BackendTemplate.API
             {
                 googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
                 googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-            }); ;
+            });
+        }
 
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
+        private static void ConfigureMiddleware(WebApplication app)
+        {
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -59,13 +81,8 @@ namespace BackendTemplate.API
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
-
             app.MapControllers();
-
-            app.Run();
         }
     }
 }

@@ -1,12 +1,9 @@
 ﻿using BackendTemplate.Infrastructure.DbContext;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 
 namespace BackendTemplate.Infrastructure.Extensions
@@ -26,5 +23,15 @@ namespace BackendTemplate.Infrastructure.Extensions
 
             return services;
         }
+
+        public static IServiceProvider ApplyMigrations(this WebApplication webApplication)
+        {
+            using var serviceScope = webApplication.Services.CreateScope();
+            var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Database.Migrate();
+
+            return webApplication.Services;
+        }
+
     }
 }
