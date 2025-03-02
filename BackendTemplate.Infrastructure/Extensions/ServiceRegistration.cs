@@ -16,6 +16,7 @@ namespace BackendTemplate.Infrastructure.Extensions
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<IKeyVaultService, KeyVaultService>();
+            services.AddScoped<IUserService, UserService>();
 
             // Resolve KeyVaultService through its interface
             var keyVaultService = services.BuildServiceProvider().GetRequiredService<IKeyVaultService>();
@@ -30,9 +31,7 @@ namespace BackendTemplate.Infrastructure.Extensions
             services.AddIdentity<UserEntity, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-
-            // key vault
-
+        
             return services;
         }
 

@@ -1,4 +1,5 @@
 ﻿using BackendTemplate.Application.DTO;
+using BackendTemplate.Application.ServicesInterface;
 using BackendTemplate.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,43 +10,36 @@ namespace BackendTemplate.API.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly UserManager<UserEntity> _userManager;
-        private readonly SignInManager<UserEntity> _signInManager;
+        private readonly IUserService _userService;
 
-        public AccountController(UserManager<UserEntity> userManager, SignInManager<UserEntity> signInManager)
+        public AccountController(IUserService userService)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
+            _userService = userService;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+        public async Task<IActionResult> Register([FromBody] RegisterUserDto registerUserDto)
         {
-            if (ModelState.IsValid)
-            {
-                var user = new UserEntity
-                {
-                    UserName = registerDto.UserName,
-                    Email = registerDto.Email
-                };
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                // Create the user
-                var result = await _userManager.CreateAsync(user, registerDto.Password);
+            var result = await _userService.RegisterUserAsync(registerUserDto);
 
-                if (result.Succeeded)
-                {
-                    // Optionally, sign the user in
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-
-                    return Ok(new { Message = "User registered successfully" });
-                }
-
-                // Return the errors if creation failed
+            if (!result.Succeeded)
                 return BadRequest(result.Errors);
-            }
 
-            // Return validation errors if model is invalid
-            return BadRequest(ModelState);
+            return Ok("User registered successfully!");
         }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginUserDto loginUserDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var token = await _userService.LoginUserAsync(loginUserDto);
+            return token == null ? Unauthorized("Invalid credentials.") : Ok(new { Token = token });
+        }
+
     }
 }

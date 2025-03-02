@@ -44,9 +44,9 @@ namespace BackendTemplate.API
             var keyVaultService = builder.Services.BuildServiceProvider().GetRequiredService<IKeyVaultService>();
 
             // Retrieve data from  Key Vault
-            var jwtSecret = keyVaultService.GetSecretAsync("jwt-secret").Result ?? throw new InvalidOperationException("JwtSettings jwt-secret is missing in the configuration.");
-            var googleClientId = keyVaultService.GetSecretAsync("Google-ClientId").Result ?? throw new InvalidOperationException("Google-ClientId secret is missing in the configuration.");
-            var googleClientSecret = keyVaultService.GetSecretAsync("Google-ClientSecret").Result ?? throw new InvalidOperationException("Google-ClientSecret secret is missing in the configuration.");
+            var jwtSecret = keyVaultService.GetSecretAsync("JwtSecret").Result;
+            var googleClientId = keyVaultService.GetSecretAsync("Google-ClientId").Result;
+            var googleClientSecret = keyVaultService.GetSecretAsync("Google-ClientSecret").Result;
 
              var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 
