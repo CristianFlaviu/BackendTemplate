@@ -1,4 +1,5 @@
 using BackendTemplate.API.Configuration;
+using BackendTemplate.Application.ServicesInterface;
 using BackendTemplate.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -39,15 +40,15 @@ namespace BackendTemplate.API
 
         private static void ConfigureAuthentication(WebApplicationBuilder builder)
         {
-            var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings") ?? throw new InvalidOperationException("JwtSettings section is missing in the configuration.");
+            // Resolve KeyVaultService through its interface
+            var keyVaultService = builder.Services.BuildServiceProvider().GetRequiredService<IKeyVaultService>();
 
-            var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
-            if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Secret))
-            {
-                throw new InvalidOperationException("JwtSettings are not properly configured.");
-            }
+            // Retrieve data from  Key Vault
+            var jwtSecret = keyVaultService.GetSecretAsync("jwt-secret").Result ?? throw new InvalidOperationException("JwtSettings jwt-secret is missing in the configuration.");
+            var googleClientId = keyVaultService.GetSecretAsync("Google-ClientId").Result ?? throw new InvalidOperationException("Google-ClientId secret is missing in the configuration.");
+            var googleClientSecret = keyVaultService.GetSecretAsync("Google-ClientSecret").Result ?? throw new InvalidOperationException("Google-ClientSecret secret is missing in the configuration.");
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret));
+             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 
             builder.Services.AddAuthentication(options =>
             {
@@ -69,8 +70,8 @@ namespace BackendTemplate.API
             })
             .AddGoogle(googleOptions =>
             {
-                googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-                googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+                googleOptions.ClientId = googleClientId;
+                googleOptions.ClientSecret = googleClientSecret;
             });
         }
 

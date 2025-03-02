@@ -1,5 +1,7 @@
-﻿using BackendTemplate.Domain.Entities;
+﻿using BackendTemplate.Application.ServicesInterface;
+using BackendTemplate.Domain.Entities;
 using BackendTemplate.Infrastructure.DbContext;
+using BackendTemplate.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,14 +15,23 @@ namespace BackendTemplate.Infrastructure.Extensions
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddSingleton<IKeyVaultService, KeyVaultService>();
+
+            // Resolve KeyVaultService through its interface
+            var keyVaultService = services.BuildServiceProvider().GetRequiredService<IKeyVaultService>();
+
+            var connString = keyVaultService.GetSecretAsync("SQLServerDBConnection").Result;
+
             // Register DbContext with SQL Server
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("SQLServerDBConnection")));
+                options.UseSqlServer(connString));
 
             // Configure Identity
             services.AddIdentity<UserEntity, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();           
+                .AddDefaultTokenProviders();
+
+            // key vault
 
             return services;
         }
@@ -47,8 +58,7 @@ namespace BackendTemplate.Infrastructure.Extensions
             ApplicationDbContext.SeedData(serviceScope.ServiceProvider, userManager, roleManager).Wait();
 
             return app;
-        }
-
+        }     
 
     }
 }
