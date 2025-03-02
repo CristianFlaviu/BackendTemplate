@@ -19,6 +19,8 @@ public class TestController : ControllerBase
     {
         _logger.LogInformation("Get method called.");
 
+        throw new Exception("This is a test exception.");
+
         return Ok("Hello World!");
     }
 }

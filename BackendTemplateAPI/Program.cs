@@ -1,4 +1,4 @@
-using BackendTemplate.API.Configuration;
+using BackendTemplate.API.Middleware;
 using BackendTemplate.Application.ServicesInterface;
 using BackendTemplate.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,6 +12,8 @@ namespace BackendTemplate.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddLoggingConfiguration(builder.Configuration);
 
             ConfigureServices(builder);
 
@@ -82,6 +84,8 @@ namespace BackendTemplate.API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseMiddleware<ExceptionHandlerMiddleware>();
 
             app.UseHttpsRedirection();
             app.UseAuthorization();

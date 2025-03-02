@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 
 namespace BackendTemplate.Infrastructure.Extensions
@@ -31,7 +32,25 @@ namespace BackendTemplate.Infrastructure.Extensions
             services.AddIdentity<UserEntity, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-        
+
+            return services;
+        }
+
+        public static IServiceCollection AddLoggingConfiguration(this IServiceCollection services, IConfiguration configuration)
+        {
+            Log.Logger = new LoggerConfiguration()
+                                .ReadFrom.Configuration(configuration) // Reads settings from appsettings.json
+                                .WriteTo.Console()
+                                .WriteTo.File("Logs/BackendTemplate.log",                                
+                                rollingInterval: RollingInterval.Hour) 
+                                .Enrich.FromLogContext()
+                                .CreateLogger();
+
+            services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddSerilog();
+            });
+
             return services;
         }
 
@@ -57,7 +76,7 @@ namespace BackendTemplate.Infrastructure.Extensions
             ApplicationDbContext.SeedData(serviceScope.ServiceProvider, userManager, roleManager).Wait();
 
             return app;
-        }     
+        }
 
     }
 }
