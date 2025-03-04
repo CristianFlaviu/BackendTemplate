@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Prometheus;
 using Serilog;
+using Serilog.Sinks.Grafana.Loki;
 
 
 namespace BackendTemplate.Infrastructure.Extensions
@@ -41,6 +43,7 @@ namespace BackendTemplate.Infrastructure.Extensions
             Log.Logger = new LoggerConfiguration()
                                 .ReadFrom.Configuration(configuration) // Reads settings from appsettings.json
                                 .WriteTo.Console()
+                                .WriteTo.GrafanaLoki("http://loki:3100") // Loki service in Docker
                                 .WriteTo.File("Logs/BackendTemplate.log",                                
                                 rollingInterval: RollingInterval.Hour) 
                                 .Enrich.FromLogContext()
@@ -74,6 +77,10 @@ namespace BackendTemplate.Infrastructure.Extensions
             var roleManager = serviceScope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
 
             ApplicationDbContext.SeedData(serviceScope.ServiceProvider, userManager, roleManager).Wait();
+
+            // Enable Prometheus metrics
+            app.UseMetricServer();
+            app.UseHttpMetrics();
 
             return app;
         }

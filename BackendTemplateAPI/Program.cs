@@ -86,6 +86,7 @@ namespace BackendTemplate.API
             }
 
             app.UseMiddleware<ExceptionHandlerMiddleware>();
+            app.UseMiddleware<RequestTimingMiddleware>();
 
             app.UseHttpsRedirection();
             app.UseAuthorization();

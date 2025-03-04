@@ -1,0 +1,26 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+
+compactor:
+  working_directory: /data/loki/compactor   # Ensure this directory exists
+  shared_store: filesystem
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /data/loki/index   # Ensure this directory exists
+    cache_location: /data/loki/cache          # Ensure this directory exists
+  filesystem:
+    directory: /data/loki/chunks             # Ensure this directory exists
+
+schema_config:
+  configs:
+    - from: 2020-10-01
+      store: boltdb_shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: loki_index_
+        period: 168h

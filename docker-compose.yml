@@ -1,0 +1,24 @@
+version: '3'
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"  # Expose Prometheus Web UI on port 9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Mount the local prometheus.yml config file to the container
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Expose Grafana Web UI on port 3000
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # Default Grafana admin password (can be changed)
+    depends_on:
+      - prometheus  # Ensure Grafana starts after Prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana  # Persistent data storage for Grafana
+
+volumes:
+  grafana-data:  # Create a volume for Grafana's persistent data

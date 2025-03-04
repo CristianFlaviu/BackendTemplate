@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'dotnet_app'
+    scheme: https  # Use https scheme
+    static_configs:
+      - targets: ['host.docker.internal:5261']  # Adjust target to your app's endpoint
+    tls_config:
+      insecure_skip_verify: true  # Skip SSL certificate verification (useful for self-signed certificates)
